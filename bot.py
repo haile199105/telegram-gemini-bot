@@ -110,7 +110,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📄 Create CV", callback_data="cv")],
         [InlineKeyboardButton("✉️ Cover Letter", callback_data="cover")],
-        [InlineKeyboardButton("📁 Portfolio", callback_data="portfolio")],  # Changed to callback_data
+        [InlineKeyboardButton("📁 Portfolio", callback_data="portfolio")],
         [InlineKeyboardButton("ℹ️ About Me", callback_data="about")],
         [InlineKeyboardButton("📞 Contact", callback_data="contact")],
         [InlineKeyboardButton("💼 Job Status", callback_data="job")],
@@ -379,6 +379,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
+    # Send a typing indicator
+    await context.bot.send_chat_action(chat_id=query.message.chat_id, action="typing")
+    
     if query.data == "help":
         await help_command(update, context)
     elif query.data == "about":
@@ -388,9 +391,25 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "job":
         await job_status(update, context)
     elif query.data == "cv":
-        await createcv(update, context)
+        # Directly start CV creation without requiring command
+        await query.message.reply_text(
+            "📄 **Let's create your CV!**\n\n"
+            "Please answer these questions:\n"
+            "1. What job title are you applying for?\n"
+            "2. What company?\n"
+            "3. What are the key requirements?"
+        )
+        context.user_data['cv_step'] = 'job_title'
     elif query.data == "cover":
-        await createcover(update, context)
+        # Directly start cover letter creation without requiring command
+        await query.message.reply_text(
+            "✉️ **Let's create your cover letter!**\n\n"
+            "Please answer these questions:\n"
+            "1. What job title are you applying for?\n"
+            "2. What company?\n"
+            "3. What are the key requirements?"
+        )
+        context.user_data['cover_step'] = 'job_title'
     elif query.data == "portfolio":
         # Handle portfolio button
         keyboard = [[InlineKeyboardButton("🌐 Visit Portfolio", url=PORTFOLIO_URL)]]
@@ -425,4 +444,5 @@ if __name__ == "__main__":
     
     print("✅ Bot is running with ALL features!")
     print("Commands: /start, /help, /about, /portfolio, /contact, /job, /projects, /skills, /createcv, /createcover")
+    print("✅ Buttons: All buttons now work directly!")
     app.run_polling()
