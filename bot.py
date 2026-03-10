@@ -15,18 +15,16 @@ if not GEMINI_API_KEY:
     print("ERROR: GEMINI_API_KEY not set!")
     exit(1)
 
-# Initialize Gemini AI
+# Initialize Gemini AI - USING CURRENT MODEL
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')  # ✅ Updated to current model
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Send a welcome message when /start is issued."""
     await update.message.reply_text(
         "👋 Hi! I'm your AI assistant. Send me any message and I'll respond!"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle all text messages with Gemini AI."""
     user_message = update.message.text
     user_name = update.effective_user.first_name
     
@@ -34,20 +32,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
     try:
-        # Ask Gemini to respond
+        # Ask Gemini to respond like you
         prompt = f"You are Haile, a friendly IT teacher. The user's name is {user_name}. Respond helpfully to: {user_message}"
         response = model.generate_content(prompt)
         
-        # Send the response (truncate if too long for Telegram)
-        reply_text = response.text[:4000]  # Telegram limit is 4096 characters
-        await update.message.reply_text(reply_text)
+        # Send the response
+        await update.message.reply_text(response.text)
 
     except Exception as e:
         print(f"AI Error: {e}")
         await update.message.reply_text("❌ Sorry, I encountered an error. Please try again.")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Send help message."""
     await update.message.reply_text(
         "📋 **Commands:**\n"
         "/start - Welcome message\n"
