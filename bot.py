@@ -110,7 +110,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📄 Create CV", callback_data="cv")],
         [InlineKeyboardButton("✉️ Cover Letter", callback_data="cover")],
-        [InlineKeyboardButton("📁 Portfolio", url=PORTFOLIO_URL)],
+        [InlineKeyboardButton("📁 Portfolio", callback_data="portfolio")],  # Changed to callback_data
         [InlineKeyboardButton("ℹ️ About Me", callback_data="about")],
         [InlineKeyboardButton("📞 Contact", callback_data="contact")],
         [InlineKeyboardButton("💼 Job Status", callback_data="job")],
@@ -167,7 +167,7 @@ I'm passionate about teaching IT and building reliable systems.
     """
     await update.message.reply_text(text)
 
-async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def portfolio_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_authorized(update.effective_user.id):
         return
     
@@ -259,7 +259,6 @@ async def createcover(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['cover_step'] = 'job_title'
 
 async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
     text = update.message.text
     
     # Handle CV creation
@@ -287,13 +286,20 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
                 with open(pdf_path, 'rb') as f:
                     await update.message.reply_document(
                         document=f,
-                        filename=f"CV_{context.user_data['cv_job'].replace(' ', '_')}.pdf"
+                        filename=f"CV_{context.user_data['cv_job'].replace(' ', '_')}.pdf",
+                        caption="📄 Your customized CV"
                     )
                 os.unlink(pdf_path)
             except Exception as e:
                 await update.message.reply_text(f"❌ Error: {e}")
             
+            # Clean up
             del context.user_data['cv_step']
+            if 'cv_job' in context.user_data:
+                del context.user_data['cv_job']
+            if 'cv_company' in context.user_data:
+                del context.user_data['cv_company']
+                
             await update.message.reply_text("✅ CV created! Use /start for main menu.")
         return
     
@@ -320,7 +326,13 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
             response = model.generate_content(prompt)
             await update.message.reply_text(response.text[:4000])
             
+            # Clean up
             del context.user_data['cover_step']
+            if 'cover_job' in context.user_data:
+                del context.user_data['cover_job']
+            if 'cover_company' in context.user_data:
+                del context.user_data['cover_company']
+                
             await update.message.reply_text("✅ Cover letter created! Use /start for main menu.")
         return
 
@@ -379,6 +391,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await createcv(update, context)
     elif query.data == "cover":
         await createcover(update, context)
+    elif query.data == "portfolio":
+        # Handle portfolio button
+        keyboard = [[InlineKeyboardButton("🌐 Visit Portfolio", url=PORTFOLIO_URL)]]
+        await query.message.reply_text(
+            "Check out my portfolio website:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 # ==================== MAIN ====================
 if __name__ == "__main__":
@@ -392,7 +411,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("about", about))
-    app.add_handler(CommandHandler("portfolio", portfolio))
+    app.add_handler(CommandHandler("portfolio", portfolio_command))
     app.add_handler(CommandHandler("contact", contact))
     app.add_handler(CommandHandler("job", job_status))
     app.add_handler(CommandHandler("projects", projects))
