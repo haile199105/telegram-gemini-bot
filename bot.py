@@ -171,11 +171,11 @@ def create_cv_pdf(job_title, company, requirements):
     pdf.cell(0, 5, "Higher Education Institution | Present", 0, 1)
     pdf.set_font('Helvetica', '', 10)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Deliver networking and programming courses", 0, 1)
+    pdf.cell(0, 5, "- Deliver networking and programming courses", 0, 1)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Guide practical lab sessions for technical skill development", 0, 1)
+    pdf.cell(0, 5, "- Guide practical lab sessions for technical skill development", 0, 1)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Prepare comprehensive training materials and assessments", 0, 1)
+    pdf.cell(0, 5, "- Prepare comprehensive training materials and assessments", 0, 1)
     pdf.ln(3)
     
     # IT Intern
@@ -185,11 +185,11 @@ def create_cv_pdf(job_title, company, requirements):
     pdf.cell(0, 5, "Koye Feche Sub-city Science & Technology Bureau | 6 Months", 0, 1)
     pdf.set_font('Helvetica', '', 10)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Configured routers and switches for local network infrastructure", 0, 1)
+    pdf.cell(0, 5, "- Configured routers and switches for local network infrastructure", 0, 1)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Implemented firewall setups to ensure network security", 0, 1)
+    pdf.cell(0, 5, "- Implemented firewall setups to ensure network security", 0, 1)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Provided server and database support", 0, 1)
+    pdf.cell(0, 5, "- Provided server and database support", 0, 1)
     pdf.ln(3)
     
     # GPS Technician
@@ -199,9 +199,9 @@ def create_cv_pdf(job_title, company, requirements):
     pdf.cell(0, 5, "Technical Services | 6+ Months", 0, 1)
     pdf.set_font('Helvetica', '', 10)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Installed vehicle tracking systems in diverse fleet environments", 0, 1)
+    pdf.cell(0, 5, "- Installed vehicle tracking systems in diverse fleet environments", 0, 1)
     pdf.cell(5)
-    pdf.cell(0, 5, "• Diagnosed connectivity and hardware issues in the field", 0, 1)
+    pdf.cell(0, 5, "- Diagnosed connectivity and hardware issues in the field", 0, 1)
     pdf.ln(5)
     
     # PROJECTS
@@ -215,9 +215,9 @@ def create_cv_pdf(job_title, company, requirements):
         pdf.cell(0, 5, "Personal Project", 0, 1)
         pdf.set_font('Helvetica', '', 10)
         pdf.cell(5)
-        pdf.cell(0, 5, "• Designed and implemented using modern technologies", 0, 1)
+        pdf.cell(0, 5, "- Designed and implemented using modern technologies", 0, 1)
         pdf.cell(5)
-        pdf.cell(0, 5, "• Demonstrated problem-solving and technical skills", 0, 1)
+        pdf.cell(0, 5, "- Demonstrated problem-solving and technical skills", 0, 1)
         pdf.ln(3)
     
     # ===== JOB SPECIFIC SECTION =====
@@ -650,5 +650,5 @@ if __name__ == "__main__":
     print("✅ Bot is running with ALL features!")
     print("Commands: /start, /help, /about, /portfolio, /contact, /job, /projects, /skills, /createcv, /createcover")
     print("✅ All buttons working!")
-    print("✅ New CV template loaded - professional two-column layout!")
+    print("✅ CV template fixed - using dashes instead of bullets")
     app.run_polling()
