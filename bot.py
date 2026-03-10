@@ -114,6 +114,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("ℹ️ About Me", callback_data="about")],
         [InlineKeyboardButton("📞 Contact", callback_data="contact")],
         [InlineKeyboardButton("💼 Job Status", callback_data="job")],
+        [InlineKeyboardButton("🚀 Projects", callback_data="projects")],
+        [InlineKeyboardButton("🔧 Skills", callback_data="skills")],
         [InlineKeyboardButton("❓ Help", callback_data="help")]
     ]
     
@@ -383,15 +385,87 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=query.message.chat_id, action="typing")
     
     if query.data == "help":
-        await help_command(update, context)
+        help_text = """
+📋 **ALL COMMANDS**
+
+**Main Commands:**
+/start - Main menu with buttons
+/help - Show this help
+
+**Information Commands:**
+/about - About Haile
+/portfolio - Portfolio link
+/contact - Contact info
+/job - Job search status
+/projects - Featured projects
+/skills - Technical skills
+
+**Document Commands:**
+/createcv - Create a CV
+/createcover - Create cover letter
+
+**AI Chat:**
+Just send any message to chat with AI!
+        """
+        await query.message.reply_text(help_text)
+        
     elif query.data == "about":
-        await about(update, context)
+        text = f"""
+👨‍💻 **About Haile**
+
+**Role:** {portfolio_data['title']}
+**Location:** {portfolio_data['location']}
+**Education:** {portfolio_data['education']}
+**Experience:** {portfolio_data['experience']}
+
+I'm passionate about teaching IT and building reliable systems.
+        """
+        await query.message.reply_text(text)
+        
     elif query.data == "contact":
-        await contact(update, context)
+        text = """
+📬 **Contact Information**
+
+📧 **Email:** haileyesusshibru19@gmail.com
+💼 **GitHub:** github.com/haile199105
+📱 **Telegram:** @haile199105
+🌐 **Portfolio:** haile-portfolio-theta.vercel.app
+
+Feel free to reach out!
+        """
+        await query.message.reply_text(text)
+        
     elif query.data == "job":
-        await job_status(update, context)
+        text = """
+💼 **Job Search Status**
+
+🔍 **Looking for:**
+• IT Instructor / Trainer
+• Python Developer
+• Network Administrator
+• Junior Developer
+
+📊 **Status:** Actively looking
+⭐ **Open to:** Remote, Hybrid, On-site
+📍 **Location:** Addis Ababa / Remote
+
+**Key Skills:** Python, Networking, Flutter, Docker
+        """
+        await query.message.reply_text(text)
+        
+    elif query.data == "projects":
+        text = "🚀 **Featured Projects:**\n\n"
+        for i, project in enumerate(portfolio_data['projects'], 1):
+            text += f"{i}. {project}\n"
+        await query.message.reply_text(text)
+        
+    elif query.data == "skills":
+        text = "🔧 **Technical Skills:**\n\n"
+        for category, skills in portfolio_data['skills'].items():
+            text += f"**{category.title()}:** {', '.join(skills[:3])}\n"
+        await query.message.reply_text(text)
+        
     elif query.data == "cv":
-        # Directly start CV creation without requiring command
         await query.message.reply_text(
             "📄 **Let's create your CV!**\n\n"
             "Please answer these questions:\n"
@@ -400,8 +474,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "3. What are the key requirements?"
         )
         context.user_data['cv_step'] = 'job_title'
+        
     elif query.data == "cover":
-        # Directly start cover letter creation without requiring command
         await query.message.reply_text(
             "✉️ **Let's create your cover letter!**\n\n"
             "Please answer these questions:\n"
@@ -410,8 +484,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "3. What are the key requirements?"
         )
         context.user_data['cover_step'] = 'job_title'
+        
     elif query.data == "portfolio":
-        # Handle portfolio button
         keyboard = [[InlineKeyboardButton("🌐 Visit Portfolio", url=PORTFOLIO_URL)]]
         await query.message.reply_text(
             "Check out my portfolio website:",
@@ -444,5 +518,5 @@ if __name__ == "__main__":
     
     print("✅ Bot is running with ALL features!")
     print("Commands: /start, /help, /about, /portfolio, /contact, /job, /projects, /skills, /createcv, /createcover")
-    print("✅ Buttons: All buttons now work directly!")
+    print("✅ All 9 buttons should now work!")
     app.run_polling()
