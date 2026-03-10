@@ -64,39 +64,170 @@ def create_cv_pdf(job_title, company, requirements):
     pdf = PDF()
     pdf.add_page()
     
-    # Title
+    # ===== HEADER =====
+    pdf.set_font('Helvetica', 'B', 24)
+    pdf.cell(0, 15, f"{portfolio_data['name']}", 0, 1, 'C')
+    
     pdf.set_font('Helvetica', 'B', 16)
-    pdf.cell(0, 10, f"CV for {job_title}", 0, 1, 'C')
-    pdf.ln(10)
-    
-    # Personal Info
-    pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 10, "Personal Information", 0, 1)
-    pdf.set_font('Helvetica', '', 11)
-    pdf.cell(0, 10, f"Name: {portfolio_data['name']}", 0, 1)
-    pdf.cell(0, 10, f"Title: {portfolio_data['title']}", 0, 1)
-    pdf.cell(0, 10, f"Location: {portfolio_data['location']}", 0, 1)
-    pdf.cell(0, 10, f"Email: haileyesusshibru19@gmail.com", 0, 1)
+    pdf.cell(0, 10, f"{portfolio_data['title']}", 0, 1, 'C')
     pdf.ln(5)
     
-    # Skills
-    pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 10, "Technical Skills", 0, 1)
+    # ===== SUMMARY =====
+    pdf.set_font('Helvetica', 'B', 14)
+    pdf.cell(0, 10, "SUMMARY", 0, 1)
     pdf.set_font('Helvetica', '', 11)
-    for category, skills in portfolio_data['skills'].items():
+    summary = f"A dedicated and passionate {job_title} with experience in {portfolio_data['experience']}. Skilled in {', '.join(portfolio_data['skills']['programming'][:3])} and dedicated to delivering high-quality results. Committed to continuous learning and teamwork to achieve organizational goals."
+    pdf.multi_cell(0, 6, summary)
+    pdf.ln(5)
+    
+    # ===== TWO COLUMN LAYOUT =====
+    # Set starting positions for columns
+    col1_x = pdf.get_x()
+    col1_y = pdf.get_y()
+    col2_x = 110  # Right column starting position
+    col2_y = col1_y
+    
+    # ===== LEFT COLUMN =====
+    pdf.set_xy(col1_x, col1_y)
+    
+    # PERSONAL DETAILS
+    pdf.set_font('Helvetica', 'B', 12)
+    pdf.cell(0, 8, "PERSONAL DETAILS", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(25, 6, "Phone", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 6, "+251 975 101 559", 0, 1)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(25, 6, "Email", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 6, "haileyesusshibru19@gmail.com", 0, 1)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(25, 6, "Location", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 6, portfolio_data['location'], 0, 1)
+    pdf.ln(5)
+    
+    # SKILLS
+    pdf.set_font('Helvetica', 'B', 12)
+    pdf.cell(0, 8, "SKILLS", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    
+    # Programming Skills
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(30, 5, "Programming", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['programming'][:4])}", 0, 1)
+    
+    # Networking
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(30, 5, "Networking", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['networking'][:4])}", 0, 1)
+    
+    # Mobile Dev
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(30, 5, "Mobile Dev", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['mobile'][:3])}", 0, 1)
+    
+    # DevOps
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(30, 5, "DevOps", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['devops'][:2])}", 0, 1)
+    pdf.ln(5)
+    
+    # LANGUAGES
+    pdf.set_font('Helvetica', 'B', 12)
+    pdf.cell(0, 8, "LANGUAGES", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(30, 5, "Amharic", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 5, ": Native", 0, 1)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(30, 5, "English", 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 5, ": Proficient", 0, 1)
+    pdf.ln(5)
+    
+    # ===== RIGHT COLUMN =====
+    pdf.set_xy(col2_x, col2_y)
+    
+    # EXPERIENCE
+    pdf.set_font('Helvetica', 'B', 14)
+    pdf.cell(0, 10, "EXPERIENCE", 0, 1)
+    
+    # IT Instructor
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.cell(0, 6, "IT Instructor", 0, 1)
+    pdf.set_font('Helvetica', 'I', 9)
+    pdf.cell(0, 5, "Higher Education Institution | Present", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Deliver networking and programming courses", 0, 1)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Guide practical lab sessions for technical skill development", 0, 1)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Prepare comprehensive training materials and assessments", 0, 1)
+    pdf.ln(3)
+    
+    # IT Intern
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.cell(0, 6, "IT Intern", 0, 1)
+    pdf.set_font('Helvetica', 'I', 9)
+    pdf.cell(0, 5, "Koye Feche Sub-city Science & Technology Bureau | 6 Months", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Configured routers and switches for local network infrastructure", 0, 1)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Implemented firewall setups to ensure network security", 0, 1)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Provided server and database support", 0, 1)
+    pdf.ln(3)
+    
+    # GPS Technician
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.cell(0, 6, "GPS Technician", 0, 1)
+    pdf.set_font('Helvetica', 'I', 9)
+    pdf.cell(0, 5, "Technical Services | 6+ Months", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Installed vehicle tracking systems in diverse fleet environments", 0, 1)
+    pdf.cell(5)
+    pdf.cell(0, 5, "• Diagnosed connectivity and hardware issues in the field", 0, 1)
+    pdf.ln(5)
+    
+    # PROJECTS
+    pdf.set_font('Helvetica', 'B', 14)
+    pdf.cell(0, 10, "PROJECTS", 0, 1)
+    
+    for i, project in enumerate(portfolio_data['projects']):
         pdf.set_font('Helvetica', 'B', 11)
-        pdf.cell(0, 6, f"{category.title()}:", 0, 1)
+        pdf.cell(0, 6, project, 0, 1)
+        pdf.set_font('Helvetica', 'I', 9)
+        pdf.cell(0, 5, "Personal Project", 0, 1)
         pdf.set_font('Helvetica', '', 10)
-        pdf.cell(10)
-        pdf.cell(0, 6, ", ".join(skills[:3]), 0, 1)
+        pdf.cell(5)
+        pdf.cell(0, 5, "• Designed and implemented using modern technologies", 0, 1)
+        pdf.cell(5)
+        pdf.cell(0, 5, "• Demonstrated problem-solving and technical skills", 0, 1)
+        pdf.ln(3)
+    
+    # ===== JOB SPECIFIC SECTION =====
     pdf.ln(5)
-    
-    # Job Match
     pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 10, f"Application for {company}", 0, 1)
-    pdf.set_font('Helvetica', '', 11)
-    pdf.multi_cell(0, 6, f"Requirements: {requirements}")
+    pdf.cell(0, 8, f"APPLICATION FOR {company.upper()}", 0, 1)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.multi_cell(0, 5, f"This CV is tailored for the {job_title} position. Key requirements addressed: {requirements}")
     
+    # Save to temporary file
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
     pdf.output(temp_file.name)
     return temp_file.name
@@ -518,5 +649,6 @@ if __name__ == "__main__":
     
     print("✅ Bot is running with ALL features!")
     print("Commands: /start, /help, /about, /portfolio, /contact, /job, /projects, /skills, /createcv, /createcover")
-    print("✅ All 9 buttons should now work!")
+    print("✅ All buttons working!")
+    print("✅ New CV template loaded - professional two-column layout!")
     app.run_polling()
