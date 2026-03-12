@@ -5,7 +5,7 @@ import google.generativeai as genai
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, ContextTypes, CallbackQueryHandler
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+import pdfkit
 import requests
 from bs4 import BeautifulSoup
 
@@ -102,8 +102,7 @@ portfolio_data = {
     ]
 }
 
-# ==================== SETUP JINJA2 TEMPLATE ====================
-# Save the HTML template to a file
+# ==================== HTML TEMPLATE ====================
 template_content = """
 <!DOCTYPE html>
 <html lang="en">
@@ -477,8 +476,9 @@ with open('cv_template.html', 'w') as f:
 # Setup Jinja2 environment
 env = Environment(loader=FileSystemLoader('.'))
 
+# ==================== PDF GENERATION FUNCTIONS ====================
 def create_cv_pdf(job_title, company, requirements_text):
-    """Create a professional CV PDF using HTML/CSS template"""
+    """Create a professional CV PDF using HTML/CSS template and pdfkit"""
     
     # Parse requirements into list
     requirements_list = [req.strip() for req in requirements_text.split(',')]
@@ -509,13 +509,58 @@ def create_cv_pdf(job_title, company, requirements_text):
         template = env.get_template('cv_template.html')
         html_content = template.render(data=cv_data)
         
-        # Convert HTML to PDF
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-        HTML(string=html_content).write_pdf(temp_file.name)
+        # Save HTML to temp file
+        html_temp = tempfile.NamedTemporaryFile(delete=False, suffix='.html', mode='w', encoding='utf-8')
+        html_temp.write(html_content)
+        html_temp.close()
         
-        return temp_file.name
+        # Convert HTML to PDF using pdfkit
+        pdf_temp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        
+        # Options for better PDF generation
+        options = {
+            'page-size': 'A4',
+            'margin-top': '0.75in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.75in',
+            'margin-left': '0.75in',
+            'encoding': "UTF-8",
+            'no-outline': None,
+            'enable-local-file-access': None
+        }
+        
+        pdfkit.from_file(html_temp.name, pdf_temp.name, options=options)
+        
+        # Clean up HTML temp file
+        os.unlink(html_temp.name)
+        
+        return pdf_temp.name
+        
     except Exception as e:
         print(f"PDF Generation Error: {e}")
+        # Fallback to simple PDF if something goes wrong
+        return create_simple_cv_pdf(job_title, company, requirements_text)
+
+def create_simple_cv_pdf(job_title, company, requirements_text):
+    """Fallback simple PDF generator"""
+    try:
+        from fpdf import FPDF
+        
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('Helvetica', 'B', 16)
+        pdf.cell(0, 10, f"CV for {job_title}", 0, 1, 'C')
+        pdf.set_font('Helvetica', '', 12)
+        pdf.cell(0, 10, f"Name: {portfolio_data['name']}", 0, 1)
+        pdf.cell(0, 10, f"Position: {job_title}", 0, 1)
+        pdf.cell(0, 10, f"Company: {company}", 0, 1)
+        pdf.multi_cell(0, 10, f"Requirements: {requirements_text}")
+        
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        pdf.output(temp_file.name)
+        return temp_file.name
+    except Exception as e:
+        print(f"Simple PDF Generation Error: {e}")
         raise e
 
 # ==================== AUTHORIZATION ====================
@@ -714,7 +759,7 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
                     )
                 os.unlink(pdf_path)
             except Exception as e:
-                await update.message.reply_text(f"❌ Error: {e}")
+                await update.message.reply_text(f"❌ Error generating CV: {str(e)}")
             
             # Clean up
             del context.user_data['cv_step']
@@ -746,8 +791,11 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
             # Use AI to generate cover letter
             prompt = f"Write a professional cover letter for {context.user_data['cover_job']} position at {context.user_data['cover_company']}. Key requirements: {text}. Use Haile's background: IT Instructor with skills in Python, networking, and Flutter."
             
-            response = model.generate_content(prompt)
-            await update.message.reply_text(response.text[:4000])
+            try:
+                response = model.generate_content(prompt)
+                await update.message.reply_text(response.text[:4000])
+            except Exception as e:
+                await update.message.reply_text(f"❌ Error generating cover letter: {str(e)}")
             
             # Clean up
             del context.user_data['cover_step']
