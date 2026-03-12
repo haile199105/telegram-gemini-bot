@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ name }} - CV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.5;
+            color: #333;
+            background: white;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+        
+        .name {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .title {
+            font-size: 18px;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+        
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .contact-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Two Column Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        
+        /* Left Column */
+        .left-column {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .personal-detail {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            width: 80px;
+            color: #2c3e50;
+        }
+        
+        .detail-value {
+            color: #555;
+        }
+        
+        .skill-category {
+            margin-bottom: 15px;
+        }
+        
+        .skill-category h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .skill-tag {
+            background: #e1f5fe;
+            color: #0277bd;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .language-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .language-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .language-level {
+            color: #0277bd;
+            font-weight: 500;
+        }
+        
+        /* Right Column */
+        .right-column {
+            padding: 0 10px;
+        }
+        
+        .experience-item {
+            margin-bottom: 25px;
+        }
+        
+        .experience-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+        
+        .experience-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .experience-company {
+            font-weight: 500;
+            color: #3498db;
+        }
+        
+        .experience-date {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .experience-description {
+            font-size: 14px;
+            color: #555;
+            margin-left: 20px;
+            list-style-type: none;
+        }
+        
+        .experience-description li {
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .experience-description li:before {
+            content: "•";
+            color: #3498db;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .project-item {
+            margin-bottom: 20px;
+        }
+        
+        .project-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .project-type {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+        
+        .project-description {
+            font-size: 13px;
+            color: #555;
+            margin-left: 20px;
+        }
+        
+        .project-description li {
+            margin-bottom: 3px;
+        }
+        
+        .job-match-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .job-match-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .job-match-text {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .requirements-list {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .requirement-badge {
+            background: white;
+            color: #0277bd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #3498db;
+        }
+        
+        @media print {
+            body {
+                padding: 20px;
+            }
+            
+            .left-column {
+                background: none;
+                border-right: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="name">{{ data.name }}</div>
+        <div class="title">{{ data.title }}</div>
+        <div class="contact-info">
+            <span>📧 {{ data.email }}</span>
+            <span>📱 {{ data.phone }}</span>
+            <span>📍 {{ data.location }}</span>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Left Column -->
+        <div class="left-column">
+            <!-- Personal Details -->
+            <div class="section">
+                <div class="section-title">Personal Details</div>
+                <div class="personal-detail">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ data.name }}</span>
+                </div>
+                <div class="personal-detail">
+                    <span class="detail-label">Title:</span>
+                    <span class="detail-value">{{ data.title }}</span>
+                </div>
+                <div class="personal-detail">
+                    <span class="detail-label">Education:</span>
+                    <span class="detail-value">{{ data.education }}</span>
+                </div>
+            </div>
+            
+            <!-- Skills -->
+            <div class="section">
+                <div class="section-title">Skills</div>
+                {% for category, skills in data.skills.items() %}
+                <div class="skill-category">
+                    <h4>{{ category|title }}</h4>
+                    <div class="skill-tags">
+                        {% for skill in skills[:5] %}
+                        <span class="skill-tag">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Languages -->
+            <div class="section">
+                <div class="section-title">Languages</div>
+                {% for lang, level in data.languages.items() %}
+                <div class="language-item">
+                    <span class="language-name">{{ lang }}</span>
+                    <span class="language-level">{{ level }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="right-column">
+            <!-- Summary -->
+            <div class="section">
+                <div class="section-title">Professional Summary</div>
+                <p style="font-size: 14px; color: #555; line-height: 1.6;">
+                    {{ data.summary }}
+                </p>
+            </div>
+            
+            <!-- Experience -->
+            <div class="section">
+                <div class="section-title">Experience</div>
+                {% for exp in data.experience %}
+                <div class="experience-item">
+                    <div class="experience-header">
+                        <span class="experience-title">{{ exp.title }}</span>
+                        <span class="experience-date">{{ exp.date }}</span>
+                    </div>
+                    <div class="experience-company">{{ exp.company }}</div>
+                    <ul class="experience-description">
+                        {% for item in exp.description %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Projects -->
+            <div class="section">
+                <div class="section-title">Projects</div>
+                {% for project in data.projects %}
+                <div class="project-item">
+                    <div class="project-name">{{ project.name }}</div>
+                    <div class="project-type">{{ project.type }}</div>
+                    <ul class="project-description">
+                        {% for item in project.description %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Job Match Section -->
+    <div class="job-match-section">
+        <div class="job-match-title">📋 Application for {{ data.job_company }}</div>
+        <div class="job-match-text">
+            This CV is tailored for the <strong>{{ data.job_title }}</strong> position. 
+            Key requirements addressed:
+        </div>
+        <div class="requirements-list">
+            {% for req in data.requirements %}
+            <span class="requirement-badge">{{ req }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
