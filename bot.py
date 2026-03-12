@@ -4,7 +4,8 @@ from datetime import datetime
 import google.generativeai as genai
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, ContextTypes, CallbackQueryHandler
-from fpdf import FPDF
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML
 import requests
 from bs4 import BeautifulSoup
 
@@ -29,208 +30,497 @@ portfolio_data = {
     'title': 'IT Instructor & Developer',
     'location': 'Addis Ababa',
     'education': 'CS Graduate',
-    'experience': '1+ year teaching, 6+ months field experience',
+    'email': 'haileyesusshibru19@gmail.com',
+    'phone': '+251 975 101 559',
+    'experience': [
+        {
+            'title': 'IT Instructor',
+            'company': 'Higher Education Institution',
+            'date': 'Present',
+            'description': [
+                'Deliver networking and programming courses',
+                'Guide practical lab sessions for technical skill development',
+                'Prepare comprehensive training materials and assessments'
+            ]
+        },
+        {
+            'title': 'IT Intern',
+            'company': 'Koye Feche Sub-city Science & Technology Bureau',
+            'date': '6 Months',
+            'description': [
+                'Configured routers and switches for local network infrastructure',
+                'Implemented firewall setups to ensure network security',
+                'Provided server and database support'
+            ]
+        },
+        {
+            'title': 'GPS Technician',
+            'company': 'Technical Services',
+            'date': '6+ Months',
+            'description': [
+                'Installed vehicle tracking systems in diverse fleet environments',
+                'Diagnosed connectivity and hardware issues in the field'
+            ]
+        }
+    ],
     'skills': {
         'networking': ['Cisco IOS', 'Routing', 'Switching', 'Firewalls', 'TCP/IP'],
         'programming': ['Python', 'Java', 'C++', 'JavaScript', 'TypeScript'],
-        'mobile': ['Flutter', 'Firebase', 'Dart'],
-        'devops': ['Docker', 'Linux'],
-        'it_support': ['Hardware', 'OS Support', 'Diagnostics']
+        'mobile': ['Flutter', 'Firebase', 'Dart', 'Android', 'iOS'],
+        'devops': ['Docker', 'Linux', 'CI/CD', 'Agile'],
+        'it_support': ['Hardware', 'OS Support', 'Diagnostics', 'Maintenance']
+    },
+    'languages': {
+        'Amharic': 'Native',
+        'English': 'Proficient'
     },
     'projects': [
-        'Network Configuration Lab Setup',
-        'Flutter-Based Mobile Application',
-        'GPS Installation & Tracking Workflow'
+        {
+            'name': 'Network Configuration Lab Setup',
+            'type': 'Personal Project',
+            'description': [
+                'Designed network lab environment with VLANs and secure routing',
+                'Implemented using Cisco equipment and best practices'
+            ]
+        },
+        {
+            'name': 'Flutter-Based Mobile Application',
+            'type': 'Personal Project',
+            'description': [
+                'Developed cross-platform mobile app with Firebase integration',
+                'Implemented real-time data synchronization and user authentication'
+            ]
+        },
+        {
+            'name': 'GPS Installation & Tracking Workflow',
+            'type': 'Personal Project',
+            'description': [
+                'Streamlined GPS installation process for vehicle tracking',
+                'Improved data accuracy by 40% through systematic workflow'
+            ]
+        }
     ]
 }
+
+# ==================== SETUP JINJA2 TEMPLATE ====================
+# Save the HTML template to a file
+template_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ data.name }} - CV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.5;
+            color: #333;
+            background: white;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+        
+        .name {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .title {
+            font-size: 18px;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+        
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        
+        .left-column {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .personal-detail {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            width: 80px;
+            color: #2c3e50;
+        }
+        
+        .detail-value {
+            color: #555;
+        }
+        
+        .skill-category {
+            margin-bottom: 15px;
+        }
+        
+        .skill-category h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .skill-tag {
+            background: #e1f5fe;
+            color: #0277bd;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .language-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .language-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .language-level {
+            color: #0277bd;
+            font-weight: 500;
+        }
+        
+        .right-column {
+            padding: 0 10px;
+        }
+        
+        .experience-item {
+            margin-bottom: 25px;
+        }
+        
+        .experience-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+        
+        .experience-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .experience-company {
+            font-weight: 500;
+            color: #3498db;
+        }
+        
+        .experience-date {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .experience-description {
+            font-size: 14px;
+            color: #555;
+            margin-left: 20px;
+            list-style-type: none;
+        }
+        
+        .experience-description li {
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .experience-description li:before {
+            content: "•";
+            color: #3498db;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .project-item {
+            margin-bottom: 20px;
+        }
+        
+        .project-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .project-type {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+        
+        .project-description {
+            font-size: 13px;
+            color: #555;
+            margin-left: 20px;
+        }
+        
+        .project-description li {
+            margin-bottom: 3px;
+        }
+        
+        .job-match-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .job-match-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .requirements-list {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .requirement-badge {
+            background: white;
+            color: #0277bd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="name">{{ data.name }}</div>
+        <div class="title">{{ data.title }}</div>
+        <div class="contact-info">
+            <span>📧 {{ data.email }}</span>
+            <span>📱 {{ data.phone }}</span>
+            <span>📍 {{ data.location }}</span>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="left-column">
+            <div class="section">
+                <div class="section-title">Personal Details</div>
+                <div class="personal-detail">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ data.name }}</span>
+                </div>
+                <div class="personal-detail">
+                    <span class="detail-label">Title:</span>
+                    <span class="detail-value">{{ data.title }}</span>
+                </div>
+                <div class="personal-detail">
+                    <span class="detail-label">Education:</span>
+                    <span class="detail-value">{{ data.education }}</span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Skills</div>
+                {% for category, skills in data.skills.items() %}
+                <div class="skill-category">
+                    <h4>{{ category|title }}</h4>
+                    <div class="skill-tags">
+                        {% for skill in skills[:5] %}
+                        <span class="skill-tag">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Languages</div>
+                {% for lang, level in data.languages.items() %}
+                <div class="language-item">
+                    <span class="language-name">{{ lang }}</span>
+                    <span class="language-level">{{ level }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="right-column">
+            <div class="section">
+                <div class="section-title">Professional Summary</div>
+                <p style="font-size: 14px; color: #555; line-height: 1.6;">
+                    {{ data.summary }}
+                </p>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Experience</div>
+                {% for exp in data.experience %}
+                <div class="experience-item">
+                    <div class="experience-header">
+                        <span class="experience-title">{{ exp.title }}</span>
+                        <span class="experience-date">{{ exp.date }}</span>
+                    </div>
+                    <div class="experience-company">{{ exp.company }}</div>
+                    <ul class="experience-description">
+                        {% for item in exp.description %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Projects</div>
+                {% for project in data.projects %}
+                <div class="project-item">
+                    <div class="project-name">{{ project.name }}</div>
+                    <div class="project-type">{{ project.type }}</div>
+                    <ul class="project-description">
+                        {% for item in project.description %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="job-match-section">
+        <div class="job-match-title">📋 Application for {{ data.job_company }}</div>
+        <div class="job-match-text">
+            This CV is tailored for the <strong>{{ data.job_title }}</strong> position. 
+            Key requirements addressed:
+        </div>
+        <div class="requirements-list">
+            {% for req in data.requirements %}
+            <span class="requirement-badge">{{ req }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+# Save template to file
+with open('cv_template.html', 'w') as f:
+    f.write(template_content)
+
+# Setup Jinja2 environment
+env = Environment(loader=FileSystemLoader('.'))
+
+def create_cv_pdf(job_title, company, requirements_text):
+    """Create a professional CV PDF using HTML/CSS template"""
+    
+    # Parse requirements into list
+    requirements_list = [req.strip() for req in requirements_text.split(',')]
+    
+    # Create summary using job title
+    summary = f"A dedicated and passionate {job_title} with experience in {portfolio_data['experience'][0]['title']}. Skilled in {', '.join(portfolio_data['skills']['programming'][:3])} and dedicated to delivering high-quality results. Committed to continuous learning and teamwork to achieve organizational goals."
+    
+    # Prepare data for template
+    cv_data = {
+        'name': portfolio_data['name'],
+        'title': portfolio_data['title'],
+        'email': portfolio_data['email'],
+        'phone': portfolio_data['phone'],
+        'location': portfolio_data['location'],
+        'education': portfolio_data['education'],
+        'summary': summary,
+        'skills': portfolio_data['skills'],
+        'languages': portfolio_data['languages'],
+        'experience': portfolio_data['experience'],
+        'projects': portfolio_data['projects'],
+        'job_title': job_title,
+        'job_company': company,
+        'requirements': requirements_list
+    }
+    
+    try:
+        # Load and render template
+        template = env.get_template('cv_template.html')
+        html_content = template.render(data=cv_data)
+        
+        # Convert HTML to PDF
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        HTML(string=html_content).write_pdf(temp_file.name)
+        
+        return temp_file.name
+    except Exception as e:
+        print(f"PDF Generation Error: {e}")
+        raise e
 
 # ==================== AUTHORIZATION ====================
 def is_authorized(user_id):
     return user_id == YOUR_ID
-
-# ==================== PDF GENERATOR ====================
-class PDF(FPDF):
-    def header(self):
-        self.set_font('Helvetica', 'B', 12)
-        self.cell(0, 10, f'Job Application - {datetime.now().strftime("%Y-%m-%d")}', 0, 1, 'C')
-        self.ln(10)
-    
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-def create_cv_pdf(job_title, company, requirements):
-    pdf = PDF()
-    pdf.add_page()
-    
-    # ===== HEADER =====
-    pdf.set_font('Helvetica', 'B', 24)
-    pdf.cell(0, 15, f"{portfolio_data['name']}", 0, 1, 'C')
-    
-    pdf.set_font('Helvetica', 'B', 16)
-    pdf.cell(0, 10, f"{portfolio_data['title']}", 0, 1, 'C')
-    pdf.ln(5)
-    
-    # ===== SUMMARY =====
-    pdf.set_font('Helvetica', 'B', 14)
-    pdf.cell(0, 10, "SUMMARY", 0, 1)
-    pdf.set_font('Helvetica', '', 11)
-    summary = f"A dedicated and passionate {job_title} with experience in {portfolio_data['experience']}. Skilled in {', '.join(portfolio_data['skills']['programming'][:3])} and dedicated to delivering high-quality results. Committed to continuous learning and teamwork to achieve organizational goals."
-    pdf.multi_cell(0, 6, summary)
-    pdf.ln(5)
-    
-    # ===== TWO COLUMN LAYOUT =====
-    # Set starting positions for columns
-    col1_x = pdf.get_x()
-    col1_y = pdf.get_y()
-    col2_x = 110  # Right column starting position
-    col2_y = col1_y
-    
-    # ===== LEFT COLUMN =====
-    pdf.set_xy(col1_x, col1_y)
-    
-    # PERSONAL DETAILS
-    pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 8, "PERSONAL DETAILS", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(25, 6, "Phone", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 6, "+251 975 101 559", 0, 1)
-    
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(25, 6, "Email", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 6, "haileyesusshibru19@gmail.com", 0, 1)
-    
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(25, 6, "Location", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 6, portfolio_data['location'], 0, 1)
-    pdf.ln(5)
-    
-    # SKILLS
-    pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 8, "SKILLS", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    
-    # Programming Skills
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(30, 5, "Programming", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['programming'][:4])}", 0, 1)
-    
-    # Networking
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(30, 5, "Networking", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['networking'][:4])}", 0, 1)
-    
-    # Mobile Dev
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(30, 5, "Mobile Dev", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['mobile'][:3])}", 0, 1)
-    
-    # DevOps
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(30, 5, "DevOps", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, f": {', '.join(portfolio_data['skills']['devops'][:2])}", 0, 1)
-    pdf.ln(5)
-    
-    # LANGUAGES
-    pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 8, "LANGUAGES", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(30, 5, "Amharic", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, ": Native", 0, 1)
-    
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(30, 5, "English", 0, 0)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(0, 5, ": Proficient", 0, 1)
-    pdf.ln(5)
-    
-    # ===== RIGHT COLUMN =====
-    pdf.set_xy(col2_x, col2_y)
-    
-    # EXPERIENCE
-    pdf.set_font('Helvetica', 'B', 14)
-    pdf.cell(0, 10, "EXPERIENCE", 0, 1)
-    
-    # IT Instructor
-    pdf.set_font('Helvetica', 'B', 11)
-    pdf.cell(0, 6, "IT Instructor", 0, 1)
-    pdf.set_font('Helvetica', 'I', 9)
-    pdf.cell(0, 5, "Higher Education Institution | Present", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Deliver networking and programming courses", 0, 1)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Guide practical lab sessions for technical skill development", 0, 1)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Prepare comprehensive training materials and assessments", 0, 1)
-    pdf.ln(3)
-    
-    # IT Intern
-    pdf.set_font('Helvetica', 'B', 11)
-    pdf.cell(0, 6, "IT Intern", 0, 1)
-    pdf.set_font('Helvetica', 'I', 9)
-    pdf.cell(0, 5, "Koye Feche Sub-city Science & Technology Bureau | 6 Months", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Configured routers and switches for local network infrastructure", 0, 1)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Implemented firewall setups to ensure network security", 0, 1)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Provided server and database support", 0, 1)
-    pdf.ln(3)
-    
-    # GPS Technician
-    pdf.set_font('Helvetica', 'B', 11)
-    pdf.cell(0, 6, "GPS Technician", 0, 1)
-    pdf.set_font('Helvetica', 'I', 9)
-    pdf.cell(0, 5, "Technical Services | 6+ Months", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Installed vehicle tracking systems in diverse fleet environments", 0, 1)
-    pdf.cell(5)
-    pdf.cell(0, 5, "- Diagnosed connectivity and hardware issues in the field", 0, 1)
-    pdf.ln(5)
-    
-    # PROJECTS
-    pdf.set_font('Helvetica', 'B', 14)
-    pdf.cell(0, 10, "PROJECTS", 0, 1)
-    
-    for i, project in enumerate(portfolio_data['projects']):
-        pdf.set_font('Helvetica', 'B', 11)
-        pdf.cell(0, 6, project, 0, 1)
-        pdf.set_font('Helvetica', 'I', 9)
-        pdf.cell(0, 5, "Personal Project", 0, 1)
-        pdf.set_font('Helvetica', '', 10)
-        pdf.cell(5)
-        pdf.cell(0, 5, "- Designed and implemented using modern technologies", 0, 1)
-        pdf.cell(5)
-        pdf.cell(0, 5, "- Demonstrated problem-solving and technical skills", 0, 1)
-        pdf.ln(3)
-    
-    # ===== JOB SPECIFIC SECTION =====
-    pdf.ln(5)
-    pdf.set_font('Helvetica', 'B', 12)
-    pdf.cell(0, 8, f"APPLICATION FOR {company.upper()}", 0, 1)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.multi_cell(0, 5, f"This CV is tailored for the {job_title} position. Key requirements addressed: {requirements}")
-    
-    # Save to temporary file
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-    pdf.output(temp_file.name)
-    return temp_file.name
 
 # ==================== COMMAND HANDLERS ====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -252,7 +542,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(
         f"👋 **Hello {update.effective_user.first_name}!**\n\n"
-        f"I'm your AI job assistant. What would you like help with?",
+        f"I'm **Haile Career Assistant**. What would you like help with?",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -294,7 +584,7 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 **Role:** {portfolio_data['title']}
 **Location:** {portfolio_data['location']}
 **Education:** {portfolio_data['education']}
-**Experience:** {portfolio_data['experience']}
+**Experience:** IT Instructor, IT Intern, GPS Technician
 
 I'm passionate about teaching IT and building reliable systems.
     """
@@ -314,10 +604,10 @@ async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_authorized(update.effective_user.id):
         return
     
-    text = """
+    text = f"""
 📬 **Contact Information**
 
-📧 **Email:** haileyesusshibru19@gmail.com
+📧 **Email:** {portfolio_data['email']}
 💼 **GitHub:** github.com/haile199105
 📱 **Telegram:** @haile199105
 🌐 **Portfolio:** haile-portfolio-theta.vercel.app
@@ -353,7 +643,7 @@ async def projects(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     text = "🚀 **Featured Projects:**\n\n"
     for i, project in enumerate(portfolio_data['projects'], 1):
-        text += f"{i}. {project}\n"
+        text += f"{i}. {project['name']}\n"
     await update.message.reply_text(text)
 
 async def skills(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -409,7 +699,7 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text("📋 **Key requirements?**")
         
         elif step == 'requirements':
-            await update.message.reply_text("⏳ **Generating your CV PDF...**")
+            await update.message.reply_text("⏳ **Generating your professional CV PDF...**")
             try:
                 pdf_path = create_cv_pdf(
                     context.user_data['cv_job'],
@@ -420,7 +710,7 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
                     await update.message.reply_document(
                         document=f,
                         filename=f"CV_{context.user_data['cv_job'].replace(' ', '_')}.pdf",
-                        caption="📄 Your customized CV"
+                        caption="📄 Your professionally designed CV"
                     )
                 os.unlink(pdf_path)
             except Exception as e:
@@ -547,17 +837,17 @@ Just send any message to chat with AI!
 **Role:** {portfolio_data['title']}
 **Location:** {portfolio_data['location']}
 **Education:** {portfolio_data['education']}
-**Experience:** {portfolio_data['experience']}
+**Experience:** IT Instructor, IT Intern, GPS Technician
 
 I'm passionate about teaching IT and building reliable systems.
         """
         await query.message.reply_text(text)
         
     elif query.data == "contact":
-        text = """
+        text = f"""
 📬 **Contact Information**
 
-📧 **Email:** haileyesusshibru19@gmail.com
+📧 **Email:** {portfolio_data['email']}
 💼 **GitHub:** github.com/haile199105
 📱 **Telegram:** @haile199105
 🌐 **Portfolio:** haile-portfolio-theta.vercel.app
@@ -587,7 +877,7 @@ Feel free to reach out!
     elif query.data == "projects":
         text = "🚀 **Featured Projects:**\n\n"
         for i, project in enumerate(portfolio_data['projects'], 1):
-            text += f"{i}. {project}\n"
+            text += f"{i}. {project['name']}\n"
         await query.message.reply_text(text)
         
     elif query.data == "skills":
@@ -625,7 +915,7 @@ Feel free to reach out!
 
 # ==================== MAIN ====================
 if __name__ == "__main__":
-    print("Starting bot with ALL features...")
+    print("Starting bot with HTML/CSS CV generator...")
     print(f"Telegram Token: {TELEGRAM_TOKEN[:5]}...")
     print(f"Gemini API Key: {GEMINI_API_KEY[:5]}...")
     
@@ -647,8 +937,8 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(CallbackQueryHandler(button_handler))
     
-    print("✅ Bot is running with ALL features!")
+    print("✅ Bot is running with professional HTML/CSS CV generation!")
     print("Commands: /start, /help, /about, /portfolio, /contact, /job, /projects, /skills, /createcv, /createcover")
     print("✅ All buttons working!")
-    print("✅ CV template fixed - using dashes instead of bullets")
+    print("✅ CVs now use modern HTML/CSS templates!")
     app.run_polling()
