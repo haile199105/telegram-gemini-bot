@@ -544,23 +544,137 @@ def create_cv_pdf(job_title, company, requirements_text):
 def create_simple_cv_pdf(job_title, company, requirements_text):
     """Fallback simple PDF generator"""
     try:
-        from fpdf import FPDF
+        # Try to import fpdf2
+        try:
+            from fpdf import FPDF
+        except ImportError:
+            try:
+                from fpdf2 import FPDF
+            except ImportError:
+                # If all else fails, create a text file
+                return create_text_cv(job_title, company, requirements_text)
         
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font('Helvetica', 'B', 16)
+        
+        # Header
+        pdf.set_font('Helvetica', 'B', 20)
+        pdf.cell(0, 15, f"{portfolio_data['name']}", 0, 1, 'C')
+        
+        pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, f"CV for {job_title}", 0, 1, 'C')
-        pdf.set_font('Helvetica', '', 12)
-        pdf.cell(0, 10, f"Name: {portfolio_data['name']}", 0, 1)
-        pdf.cell(0, 10, f"Position: {job_title}", 0, 1)
-        pdf.cell(0, 10, f"Company: {company}", 0, 1)
-        pdf.multi_cell(0, 10, f"Requirements: {requirements_text}")
+        pdf.ln(5)
+        
+        # Contact Info
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.cell(0, 8, "Contact Information", 0, 1)
+        pdf.set_font('Helvetica', '', 10)
+        pdf.cell(0, 6, f"Email: {portfolio_data['email']}", 0, 1)
+        pdf.cell(0, 6, f"Phone: {portfolio_data['phone']}", 0, 1)
+        pdf.cell(0, 6, f"Location: {portfolio_data['location']}", 0, 1)
+        pdf.ln(3)
+        
+        # Professional Summary
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.cell(0, 8, "Professional Summary", 0, 1)
+        pdf.set_font('Helvetica', '', 10)
+        summary = f"Experienced {portfolio_data['title']} applying for {job_title} position at {company}."
+        pdf.multi_cell(0, 5, summary)
+        pdf.ln(3)
+        
+        # Skills
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.cell(0, 8, "Skills", 0, 1)
+        pdf.set_font('Helvetica', '', 10)
+        skills_text = ""
+        for category, skills in portfolio_data['skills'].items():
+            skills_text += f"{category.title()}: {', '.join(skills[:3])}\n"
+        pdf.multi_cell(0, 5, skills_text)
+        pdf.ln(3)
+        
+        # Experience
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.cell(0, 8, "Experience", 0, 1)
+        pdf.set_font('Helvetica', '', 10)
+        for exp in portfolio_data['experience'][:2]:
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.cell(0, 5, f"{exp['title']} - {exp['company']}", 0, 1)
+            pdf.set_font('Helvetica', 'I', 9)
+            pdf.cell(0, 4, exp['date'], 0, 1)
+            pdf.set_font('Helvetica', '', 9)
+            for desc in exp['description'][:2]:
+                pdf.cell(5)
+                pdf.cell(0, 4, f"- {desc}", 0, 1)
+            pdf.ln(2)
+        
+        # Job Requirements
+        pdf.ln(3)
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.cell(0, 8, f"Application for {company}", 0, 1)
+        pdf.set_font('Helvetica', '', 10)
+        pdf.multi_cell(0, 5, f"Key requirements addressed: {requirements_text}")
         
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
         pdf.output(temp_file.name)
         return temp_file.name
+        
     except Exception as e:
         print(f"Simple PDF Generation Error: {e}")
+        # Ultimate fallback - create a text file
+        return create_text_cv(job_title, company, requirements_text)
+
+def create_text_cv(job_title, company, requirements_text):
+    """Ultimate fallback - create a text file"""
+    try:
+        content = f"""
+========================================
+           CURRICULUM VITAE
+========================================
+
+Name: {portfolio_data['name']}
+Title: {portfolio_data['title']}
+Email: {portfolio_data['email']}
+Phone: {portfolio_data['phone']}
+Location: {portfolio_data['location']}
+
+========================================
+PROFESSIONAL SUMMARY
+========================================
+Experienced {portfolio_data['title']} applying for {job_title} position at {company}.
+
+========================================
+SKILLS
+========================================
+"""
+        for category, skills in portfolio_data['skills'].items():
+            content += f"{category.title()}: {', '.join(skills[:3])}\n"
+        
+        content += """
+========================================
+EXPERIENCE
+========================================
+"""
+        for exp in portfolio_data['experience']:
+            content += f"\n{exp['title']} - {exp['company']} ({exp['date']})\n"
+            for desc in exp['description']:
+                content += f"  • {desc}\n"
+        
+        content += f"""
+========================================
+APPLICATION FOR {company.upper()}
+========================================
+Position: {job_title}
+Requirements: {requirements_text}
+========================================
+"""
+        
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.txt', mode='w')
+        temp_file.write(content)
+        temp_file.close()
+        return temp_file.name
+        
+    except Exception as e:
+        print(f"Text CV Generation Error: {e}")
         raise e
 
 # ==================== AUTHORIZATION ====================
@@ -751,13 +865,22 @@ async def handle_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
                     context.user_data['cv_company'],
                     text
                 )
-                with open(pdf_path, 'rb') as f:
-                    await update.message.reply_document(
-                        document=f,
-                        filename=f"CV_{context.user_data['cv_job'].replace(' ', '_')}.pdf",
-                        caption="📄 Your professionally designed CV"
-                    )
+                
+                # Check what kind of file was created
+                if pdf_path.endswith('.txt'):
+                    with open(pdf_path, 'r') as f:
+                        await update.message.reply_text(
+                            f"📄 **Your CV (Text Format)**\n\n{f.read()[:4000]}"
+                        )
+                else:
+                    with open(pdf_path, 'rb') as f:
+                        await update.message.reply_document(
+                            document=f,
+                            filename=f"CV_{context.user_data['cv_job'].replace(' ', '_')}.pdf",
+                            caption="📄 Your CV"
+                        )
                 os.unlink(pdf_path)
+                
             except Exception as e:
                 await update.message.reply_text(f"❌ Error generating CV: {str(e)}")
             
@@ -988,5 +1111,5 @@ if __name__ == "__main__":
     print("✅ Bot is running with professional HTML/CSS CV generation!")
     print("Commands: /start, /help, /about, /portfolio, /contact, /job, /projects, /skills, /createcv, /createcover")
     print("✅ All buttons working!")
-    print("✅ CVs now use modern HTML/CSS templates!")
+    print("✅ CV generation has 3 fallback levels: HTML/CSS → Simple PDF → Text file")
     app.run_polling()
